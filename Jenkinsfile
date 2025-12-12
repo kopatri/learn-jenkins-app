@@ -27,7 +27,11 @@ pipeline {
                 sh '''
                 test -f build/index.html
                 echo $? 
-                CI=true npm test
+                node --version
+                npm --version
+                npm ci
+                npm run build
+                npm test
                 '''
             }
         }
