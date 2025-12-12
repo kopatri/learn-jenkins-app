@@ -21,5 +21,8 @@ pipeline {
                 echo 'Hello World'
             }
         }
+        stage('Test'){
+            echo "Test stage"
+        }
     }
 }
