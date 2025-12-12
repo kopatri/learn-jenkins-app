@@ -1,6 +1,6 @@
 pipeline {
     agent any
-
+    
     stages {
         stage('build') {
             agent {
@@ -27,6 +27,7 @@ pipeline {
                 sh '''
                 test -f build/index.html
                 echo $? 
+                npm test -- --watchAll
                 '''
             }
         }
