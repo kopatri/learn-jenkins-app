@@ -16,6 +16,7 @@ pipeline {
             }
             steps {
                 sh '''
+                    echo 'Small Change"
                     ls -la
                     node --version
                     npm --version
@@ -93,7 +94,6 @@ pipeline {
                     echo "Deploying to production. SITE ID: $NETLIFY_SITE_ID"
                     node_modules/.bin/netlify status
                     node_modules/.bin/netlify deploy --dir=build --prod
-
                 '''
             }
         }
