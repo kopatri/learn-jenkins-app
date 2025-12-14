@@ -24,13 +24,11 @@ pipeline {
                     npm run build
                     ls -la
                 '''
-                echo 'Hello World'
             }
         }
 
         stage('Tests') {
             parallel {
-
                 stage('Unit Tests') {
                     agent {
                         docker {
