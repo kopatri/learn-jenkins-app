@@ -53,7 +53,8 @@ pipeline {
                 stage('E2E') {
                     agent {
                         docker {
-                            image 'mcr.microsoft.com/playwright:v1.49.1-jammy '
+                            image 'mcr.microsoft.com/playwright:v1.49.1-jammy' // same as "@playwright/test": "^1.49.1"
+
                             reuseNode true
                         }
                     }
