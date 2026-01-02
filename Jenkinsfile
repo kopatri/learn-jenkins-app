@@ -5,6 +5,10 @@ pipeline {
         // NETLIFY_SITE_ID     = '83b9c8c3-d16f-4e82-8cb2-7ccea4cddea0'
         // NETLIFY_AUTH_TOKEN = credentials('netlify-token')
         REACT_APP_VERSION = "1.0.$BUILD_ID"
+        AWS_DEFAULT_REGION = 'us-east-1'
+        AWS_ECS_CLUSTER = 'LearnJenkinsApp-Cluster-Prod-kopatri'
+        AWS_ECS_SERVICE_PROD = 'LearnJenkinsApp-TaskDefinition-Prod-kopatri-service-ka7fnxrj'
+        AWS_ECS_TD_PROD = 'LearnJenkinsApp-TaskDefinition-Prod-kopatri'
     }
 
     stages {
@@ -19,7 +23,7 @@ pipeline {
             }
             environment {
                 // AWS_S3_BUCKET = 'learn-jenkins-211220251800'
-                AWS_DEFAULT_REGION = 'us-east-1'
+                
 
             }
             steps {
@@ -28,9 +32,8 @@ pipeline {
                         aws --version
                         yum install jq -y
                         LATEST_TD_REVISION=$(aws ecs register-task-definition --cli-input-json file://aws/task-definition-prod.json | jq '.taskDefinition.revision')
-                        echo $LATEST_TD_REVISION
-                        aws ecs update-service --cluster LearnJenkinsApp-Cluster-Prod-kopatri --service LearnJenkinsApp-TaskDefinition-Prod-kopatri-service-ka7fnxrj --task-definition LearnJenkinsApp-TaskDefinition-Prod-kopatri:$LATEST_TD_REVISION
-                        aws ecs wait services-stable --cluster LearnJenkinsApp-Cluster-Prod-kopatri --services LearnJenkinsApp-TaskDefinition-Prod-kopatri-service-ka7fnxrj
+                        aws ecs update-service --cluster $AWS_ECS_CLUSTER --service $AWS_ECS_SERVICE_PROD --task-definition $AWS_ECS_TD_PROD:$LATEST_TD_REVISION
+                        aws ecs wait services-stable --cluster $AWS_ECS_CLUSTER --services $AWS_ECS_SERVICE_PROD
                     '''
                 }
             }
