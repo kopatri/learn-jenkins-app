@@ -9,7 +9,7 @@ pipeline {
         AWS_ECS_TD_PROD = 'LearnJenkinsApp-TaskDefinition-Prod-kopatri'
     }
 
-    stages {
+stages {
 
         stage('Build') {
             agent {
@@ -33,18 +33,19 @@ pipeline {
         stage('Build Docker image') {
             agent {
                 docker {
-                    image 'docker:25-dind'
-                    privileged true
+                    image 'amazon/aws-cli'
+                    reuseNode true
+                    args "-u root -v /var/run/docker.sock:/var/run/docker.sock --entrypoint=''"
                 }
             }
+
             steps {
                 sh '''
-                    dockerd-entrypoint.sh &
-                    sleep 10
+                    amazon-linux-extras install docker
                     docker build -t myjenkinsapp .
                 '''
             }
-        }    
+        }        
 
         stage('Deploy to AWS') {
             agent {
@@ -54,6 +55,7 @@ pipeline {
                     args "-u root --entrypoint=''"
                 }
             }
+
             steps {
                 withCredentials([usernamePassword(credentialsId: 'my-aws', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
                     sh '''
@@ -65,6 +67,6 @@ pipeline {
                     '''
                 }
             }
-        }
+        }        
     }
 }
