@@ -32,30 +32,22 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image'){
-            agent{
+        stage('Build Docker image') {
+            agent {
                 docker {
-                    image 'amazon/aws-cli' 
+                    image 'amazon/aws-cli'
                     reuseNode true
-                    args "-u root -v/var/run/docker.sock:/var/run/docker.sock --entrypoint=''"
+                    args "-u root -v /var/run/docker.sock:/var/run/docker.sock --entrypoint=''"
                 }
             }
-            steps{
+
+            steps {
                 sh '''
                     amazon-linux-extras install docker
                     docker build -t myjenkinsapp .
                 '''
             }
-        }
-
-        stage ('Deploy to AWS'){
-            agent{
-                docker {
-                    image 'amazon/aws-cli' 
-                    reuseNode true
-                    args "-u root --entrypoint=''"
-                }
-            }
+        }        
 
             steps {
                 withCredentials([usernamePassword(credentialsId: 'my-aws', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
