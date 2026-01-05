@@ -2,8 +2,6 @@ pipeline {
     agent any
 
     environment {
-        // NETLIFY_SITE_ID    = '83b9c8c3-d16f-4e82-8cb2-7ccea4cddea0'
-        // NETLIFY_AUTH_TOKEN = credentials('netlify-token')
         REACT_APP_VERSION = "1.0.$BUILD_ID"
         AWS_DEFAULT_REGION = 'us-east-1'
         AWS_ECS_CLUSTER = 'LearnJenkinsApp-Cluster-Prod-kopatri'
@@ -22,12 +20,10 @@ pipeline {
             }
             steps {
                 sh '''
-                    ls -la
                     node --version
                     npm --version
                     npm ci
                     npm run build
-                    ls -la
                 '''
             }
         }
@@ -35,19 +31,18 @@ pipeline {
         stage('Build Docker image') {
             agent {
                 docker {
-                    image 'amazon/aws-cli'
+                    image 'docker:25-cli'
                     reuseNode true
-                    args "-u root -v /var/run/docker.sock:/var/run/docker.sock --entrypoint=''"
+                    args "-v /var/run/docker.sock:/var/run/docker.sock"
                 }
             }
-
             steps {
                 sh '''
-                    amazon-linux-extras install docker
+                    docker version
                     docker build -t myjenkinsapp .
                 '''
             }
-        }        
+        }
 
         stage('Deploy to AWS') {
             agent {
@@ -58,15 +53,29 @@ pipeline {
                 }
             }
             steps {
-                withCredentials([usernamePassword(credentialsId: 'my-aws', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                withCredentials([usernamePassword(
+                    credentialsId: 'my-aws',
+                    usernameVariable: 'AWS_ACCESS_KEY_ID',
+                    passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+                )]) {
                     sh '''
                         aws --version
-                        yum install jq -y
-                        LATEST_TD_REVISION=$(aws ecs register-task-definition --cli-input-json file://aws/task-definition-prod.json | jq '.taskDefinition.revision')
-                        aws ecs update-service --cluster $AWS_ECS_CLUSTER --service $AWS_ECS_SERVICE_PROD --task-definition $AWS_ECS_TD_PROD:$LATEST_TD_REVISION
-                        aws ecs wait services-stable --cluster $AWS_ECS_CLUSTER --services $AWS_ECS_SERVICE_PROD
-                    '''
+                        yum install -y jq
 
+                        LATEST_TD_REVISION=$(aws ecs register-task-definition \
+                          --cli-input-json file://aws/task-definition-prod.json \
+                          | jq -r '.taskDefinition.revision')
+
+                        aws ecs update-service \
+                          --cluster $AWS_ECS_CLUSTER \
+                          --service $AWS_ECS_SERVICE_PROD \
+                          --task-definition $AWS_ECS_TD_PROD:$LATEST_TD_REVISION
+
+                        aws ecs wait services-stable \
+                          --cluster $AWS_ECS_CLUSTER \
+                          --services $AWS_ECS_SERVICE_PROD
+                    '''
+                }
             }
         }
     }
