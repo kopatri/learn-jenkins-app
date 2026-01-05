@@ -1,5 +1,4 @@
-    FROM amazon/aws-cli
-     
-    RUN yum update -y && \
-        yum install -y docker jq && \
-        yum clean all
+FROM amazon/aws-cli:2
+
+RUN yum install -y docker \
+ && docker --version
