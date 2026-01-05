@@ -35,15 +35,16 @@ stages {
         stage('Build Docker image') {
             agent {
                 docker {
-                    image 'my-aws-cli'
+                    image 'docker:25-cli'
                     reuseNode true
-                    args "-u root -v /var/run/docker.sock:/var/run/docker.sock --entrypoint=''"
+                    args '-v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
 
             steps {
                 withCredentials([usernamePassword(credentialsId: 'my-aws', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
                 sh '''
+                    apk add --no-cache aws-cli
                     docker build -t $AWS_DOCKER_REGISTRY:$REACT_APP_VERSION .
                     aws ecr get-login-password | docker login --username AWS --password:stdin $AWS_DOCKER_REGISTRY
                     docker push $AWS_DOCKER_REGISTRY:$REACT_APP_VERSION
