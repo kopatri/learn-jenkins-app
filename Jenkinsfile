@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        // NETLIFY_SITE_ID     = '83b9c8c3-d16f-4e82-8cb2-7ccea4cddea0'
+        // NETLIFY_SITE_ID    = '83b9c8c3-d16f-4e82-8cb2-7ccea4cddea0'
         // NETLIFY_AUTH_TOKEN = credentials('netlify-token')
         REACT_APP_VERSION = "1.0.$BUILD_ID"
         AWS_DEFAULT_REGION = 'us-east-1'
@@ -12,6 +12,42 @@ pipeline {
     }
 
     stages {
+
+        stage('Build') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
+                    ls -la
+                    node --version
+                    npm --version
+                    npm ci
+                    npm run build
+                    ls -la
+                '''
+            }
+        }
+
+        stage('Build Docker Image'){
+            agent{
+                docker {
+                    image 'amazon/aws-cli' 
+                    reuseNode true
+                    args "-u root -v/var/run/docker.sock:/var/run/docker.sock --entrypoint=''"
+                }
+            steps{
+                sh '''
+                    amazon-linux-extras install docker
+                    docker build -t myjenkinsapp .
+                '''
+
+    
+            }
+        }
 
         stage ('Deploy to AWS'){
             agent{
@@ -34,26 +70,6 @@ pipeline {
                 }
             }
         }
-
-        stage('Build') {
-            agent {
-                docker {
-                    image 'node:18-alpine'
-                    reuseNode true
-                }
-            }
-            steps {
-                sh '''
-                    ls -la
-                    node --version
-                    npm --version
-                    npm ci
-                    npm run build
-                    ls -la
-                '''
-            }
-        }
-
 
 
         // stage('Tests') {
