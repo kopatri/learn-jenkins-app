@@ -42,7 +42,7 @@ stages {
 
             steps {
                 sh '''
-                    amazon-linux-extras install docker
+                    sudo amazon-linux-extras install docker
                     docker build -t $APP_NAME:$REACT_APP_VERSION .
                 '''
             }
